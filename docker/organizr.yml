@@ -1,0 +1,15 @@
+version: "3.6"
+services:
+    organizr:
+        container_name: organizr
+        hostname: organizr
+        image: organizr/organizr:latest
+        restart: unless-stopped
+        ports:
+            - 80:80
+        volumes:
+            - /mnt/data:/config
+        environment:
+            - PUID=110
+            - PGID=118
+            - TZ=America/Chicago
