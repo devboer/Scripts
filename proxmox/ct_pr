@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Interactive pct container tool with preview
+
+action="$1"
+[[ -z "$action" ]] && { echo "Usage: ct {enter|start|stop|reboot}"; exit 1; }
+
+# Map action to status filter
+case "$action" in
+  enter|stop|reboot)
+    filter="running"
+    ;;
+  start)
+    filter="stopped"
+    ;;
+  *)
+    echo "Unknown action: $action"
+    exit 1
+    ;;
+esac
+
+# Extract containers with the right status
+container_list=$(pct list | tail -n +2 | awk -v f="$filter" '$0 ~ f')
+
+if [[ -z "$container_list" ]]; then
+  echo "No containers with status: $filter"
+  exit 1
+fi
+
+# fzf with preview feature
+selected_line=$(echo "$container_list" | fzf --prompt="$action > " --header="VMID  Name  Status  ..."
+  --preview="pct config {1}" --preview-window=right:60%:wrap)
+
+[[ -z "$selected_line" ]] && { echo "No container selected."; exit 1; }
+
+vmid=$(awk '{print $1}' <<< "$selected_line")
+
+echo "$action container $vmid..."
+pct "$action" "$vmid"
+
